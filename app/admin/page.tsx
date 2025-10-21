@@ -128,17 +128,19 @@ export default async function AdminPage() {
 
         {/* Quick Actions */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardHeader>
-              <CardTitle>User Management</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-600 mb-4">
-                Manage user accounts, roles, and permissions
-              </p>
-              <p className="text-sm text-blue-600">Coming Soon</p>
-            </CardContent>
-          </Card>
+          <Link href="/admin/users">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardHeader>
+                <CardTitle>User Management</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600 mb-4">
+                  Manage user accounts, roles, and permissions
+                </p>
+                <p className="text-sm text-blue-600">View Users →</p>
+              </CardContent>
+            </Card>
+          </Link>
 
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardHeader>
@@ -152,17 +154,19 @@ export default async function AdminPage() {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardHeader>
-              <CardTitle>Audit Logs</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-600 mb-4">
-                View system activity and security logs
-              </p>
-              <p className="text-sm text-blue-600">Coming Soon</p>
-            </CardContent>
-          </Card>
+          <Link href="/admin/audit-logs">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardHeader>
+                <CardTitle>Audit Logs</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600 mb-4">
+                  View system activity and security logs
+                </p>
+                <p className="text-sm text-blue-600">View Logs →</p>
+              </CardContent>
+            </Card>
+          </Link>
 
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardHeader>
