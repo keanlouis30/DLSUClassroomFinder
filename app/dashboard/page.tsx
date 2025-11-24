@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { Building2, LogOut, Calendar, User } from 'lucide-react';
 import LayeredHeatMap from '@/components/heatmap/LayeredHeatMap';
+import LastLogin from '@/components/last_login/LastLogin';
+
 import Link from 'next/link';
 
 export default async function DashboardPage() {
@@ -63,6 +65,7 @@ export default async function DashboardPage() {
               <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
                 {profile?.role || 'user'}
               </p>
+              <LastLogin />
             </div>
             
             {/* Logout */}

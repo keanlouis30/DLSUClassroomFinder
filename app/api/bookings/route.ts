@@ -9,6 +9,8 @@ const BookingSchema = z.object({
   end_time: z.string().regex(/^\d{2}:\d{2}$/),
 });
 
+// need to test the logging as well 
+
 // GET: Fetch user's bookings
 export async function GET(request: Request) {
   const supabase = await createClient();
