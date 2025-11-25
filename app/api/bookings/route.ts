@@ -7,6 +7,9 @@ const BookingSchema = z.object({
   booking_date: z.string(),
   start_time: z.string().regex(/^\d{2}:\d{2}$/),
   end_time: z.string().regex(/^\d{2}:\d{2}$/),
+  purpose: z.enum(['group_study', 'project_meeting', 'review_session', 'org_activity', 'presentation_prep', 'tutoring', 'workshop']),
+  purpose_details: z.string().optional().nullable(),
+  estimated_attendees: z.number().int().min(2),
 });
 
 // need to test the logging as well 

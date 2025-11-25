@@ -1,10 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Calendar, Clock, Users, Wifi, Monitor, AirVent, AlertCircle, BookOpen, CalendarPlus } from 'lucide-react'
+import { Calendar, Clock, Users, Wifi, Monitor, AirVent, AlertCircle, BookOpen } from 'lucide-react'
 import { ClassroomWithStatus, ScheduleEvent } from '@/types/heatmap'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
 
 interface RoomDetailProps {
   roomId: string
@@ -21,6 +22,10 @@ export default function RoomDetail({ roomId, roomName, buildingId }: RoomDetailP
   const supabase = createClient()
 
   console.log('[RoomDetail] Component mounted with props:', { roomId, roomName, buildingId })
+
+  const handleBookRoom = () => {
+    router.push(`/dashboard/bookings?classroomId=${roomId}&date=${selectedDate}`)
+  }
 
   // Time slots for the day (8 AM to 8 PM)
   const timeSlots = Array.from({ length: 13 }, (_, i) => {
@@ -123,11 +128,6 @@ export default function RoomDetail({ roomId, roomName, buildingId }: RoomDetailP
     }
   }
 
-  const handleQuickBook = () => {
-    // Navigate to booking page with pre-filled classroom
-    router.push(`/dashboard/booking?classroomId=${roomId}&date=${selectedDate}`)
-  }
-
   if (!classroom) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -202,10 +202,29 @@ export default function RoomDetail({ roomId, roomName, buildingId }: RoomDetailP
 
           {/* Info Message - No Student Booking */}
           {classroom.status === 'available' && (
-            <div className="flex items-center gap-2 px-6 py-3 bg-gray-100 dark:bg-gray-700 rounded-lg text-gray-600 dark:text-gray-400 text-sm">
-              <AlertCircle className="w-5 h-5" />
-              <span>Available - For Official Use Only</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 px-6 py-3 bg-gray-100 dark:bg-gray-700 rounded-lg text-gray-600 dark:text-gray-400 text-sm">
+                <AlertCircle className="w-5 h-5" />
+                <span>Available - For Official Use Only</span>
+              </div>
+              
+              <Button
+                onClick={handleBookRoom}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Book This Room
+              </Button>
             </div>
+          )}
+
+          {classroom.status !== 'available' && (
+            <Button
+              onClick={handleBookRoom}
+              disabled
+              className="bg-gray-400 text-white cursor-not-allowed"
+            >
+              Not Available
+            </Button>
           )}
         </div>
       </div>
@@ -294,12 +313,14 @@ export default function RoomDetail({ roomId, roomName, buildingId }: RoomDetailP
           <div className="text-center py-12">
             <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-3" />
             <p className="text-gray-500 dark:text-gray-400">No events scheduled for this day</p>
-            <button
-              onClick={handleQuickBook}
-              className="mt-4 text-blue-600 dark:text-blue-400 hover:underline font-medium"
-            >
-              Be the first to book this room
-            </button>
+            {classroom.status === 'available' && (
+              <Button
+                onClick={handleBookRoom}
+                className="mt-4 bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Book This Room
+              </Button>
+            )}
           </div>
         )}
       </div>
