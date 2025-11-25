@@ -194,7 +194,7 @@ For issues or questions:
 ## TODO
 Person A
 
-- [x] Create test account seed script -> created a script to make kean admin and dionel manager but it didn't work since wala raw manager sa db and kean hasn't logged in yet
+- [x] Create test account seed script -> `created a script to make kean admin and dionel manager but it didn't work since wala raw manager sa db and kean hasn't logged in yet`
 
 - [x] Add last login display to user dashboard
 - [x] Add input validation failure logging
