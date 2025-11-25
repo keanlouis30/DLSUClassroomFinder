@@ -26,6 +26,7 @@ export async function GET(request: Request) {
   const limit = parseInt(searchParams.get('limit') || '20');
   const action = searchParams.get('action');
   const userId = searchParams.get('user_id');
+  const email = searchParams.get('email');
   const resourceType = searchParams.get('resource_type');
   const dateFrom = searchParams.get('date_from');
   const dateTo = searchParams.get('date_to');
@@ -34,12 +35,17 @@ export async function GET(request: Request) {
   const offset = (page - 1) * limit;
 
   let query = supabase
-    .from('audit_logs')
-    .select(`
-      *,
-      user:users(name, email, role)
-    `, { count: 'exact' })
-    .order('timestamp', { ascending: false });
+  .from('audit_logs')
+  .select(`
+    *,
+    user:user_id (
+      id,
+      email,
+      name,
+      role
+    )
+  `, { count: 'exact' })
+  .order('timestamp', { ascending: false });
 
   // Apply filters
   if (action) {
@@ -47,6 +53,9 @@ export async function GET(request: Request) {
   }
   if (userId) {
     query = query.eq('user_id', userId);
+  }
+  if (email) {
+    query = query.not('user_id', 'is', null).ilike('user.email', `%${email}%`);
   }
   if (resourceType) {
     query = query.eq('resource_type', resourceType);

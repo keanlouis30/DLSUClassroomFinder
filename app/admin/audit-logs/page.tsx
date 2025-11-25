@@ -49,7 +49,8 @@ export default function AuditLogsPage() {
     resource_type: '',
     date_from: '',
     date_to: '',
-    user_id: ''
+    user_id: '',
+    email: ''
   })
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null)
   const [showLogDetail, setShowLogDetail] = useState(false)
@@ -140,7 +141,8 @@ export default function AuditLogsPage() {
       resource_type: '',
       date_from: '',
       date_to: '',
-      user_id: ''
+      user_id: '',
+      email: ''
     })
     setPagination(p => ({ ...p, page: 1 }))
   }
@@ -252,8 +254,8 @@ export default function AuditLogsPage() {
                 <Label htmlFor="search">Search User</Label>
                 <Input
                   placeholder="User email..."
-                  value={filters.user_id}
-                  onChange={(e) => setFilters(f => ({ ...f, user_id: e.target.value }))}
+                  value={filters.email}
+                  onChange={(e) => setFilters(f => ({ ...f, email: e.target.value }))}
                 />
               </div>
             </div>
