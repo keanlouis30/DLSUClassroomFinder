@@ -130,3 +130,15 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE INDEX IF NOT EXISTS idx_login_attempts_email_created ON login_attempts(email, created_at);
 CREATE INDEX IF NOT EXISTS idx_login_attempts_ip_created ON login_attempts(ip_address, created_at);
 CREATE INDEX IF NOT EXISTS idx_login_attempts_success_created ON login_attempts(success, created_at);
+
+-- INSERT INTO login_attempts (email, success, ip_address, user_agent, domain_valid, created_at)
+-- VALUES 
+--   ('testlock@dlsu.edu.ph', false, '203.0.113.1'::inet, 'test', true, NOW() - INTERVAL '5 min'),
+--   ('testlock@dlsu.edu.ph', false, '203.0.113.2'::inet, 'test', true, NOW() - INTERVAL '4 min'),
+--   ('testlock@dlsu.edu.ph', false, '203.0.113.3'::inet, 'test', true, NOW() - INTERVAL '3 min'),
+--   ('testlock@dlsu.edu.ph', false, '203.0.113.4'::inet, 'test', true, NOW() - INTERVAL '2 min'),
+--   ('testlock@dlsu.edu.ph', false, '203.0.113.5'::inet, 'test', true, NOW());
+
+-- -- Then verify:
+-- SELECT * FROM is_account_rate_limited('testlock@dlsu.edu.ph');
+-- -- Should return: is_limited = true, minutes_remaining = 29-30

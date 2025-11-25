@@ -14,12 +14,19 @@ export default async function DashboardPage() {
     redirect('/auth/login');
   }
 
+  console.log('[Dashboard] Auth User ID:', user.id);
+  console.log('[Dashboard] Auth User Email:', user.email);
+
   // Get user profile with role
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('users')
     .select('*')
     .eq('id', user.id)
     .single();
+
+  console.log('[Dashboard] Profile fetch error:', profileError?.message || 'None');
+  console.log('[Dashboard] Profile data:', profile);
+  console.log('[Dashboard] User role:', profile?.role || 'NOT FOUND');
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">

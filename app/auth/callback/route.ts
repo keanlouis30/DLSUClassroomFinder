@@ -24,11 +24,25 @@ export async function GET(request: Request) {
   const clientIP = getClientIP(request);
   const userAgent = request.headers.get('user-agent') || '';
 
+  console.log('[OAuth Callback] Starting OAuth callback process');
+  console.log(`[OAuth Callback] Code: ${code ? 'Present' : 'Missing'}`);
+  console.log(`[OAuth Callback] Client IP: ${clientIP}`);
+
   if (code) {
+    console.log('[OAuth Callback] Exchanging code for session...');
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (error) {
+      console.error('[OAuth Callback] OAuth exchange error:', error.message);
+    } else {
+      console.log('[OAuth Callback] OAuth exchange successful');
+      console.log(`[OAuth Callback] User ID: ${data.user?.id}`);
+      console.log(`[OAuth Callback] User Email: ${data.user?.email}`);
+    }
 
     if (!error && data.user) {
       const email = data.user.email;
+      console.log(`[OAuth Callback] Processing login for: ${email}`);
 
       // Check IP-based rate limiting
       const { data: ipLimitData } = await supabase.rpc('is_ip_rate_limited', {
@@ -115,6 +129,44 @@ export async function GET(request: Request) {
         is_success: true
       });
 
+      // Fetch user profile to verify role
+      console.log(`[OAuth Callback] Fetching user profile for ID: ${data.user.id}`);
+      const { data: profile, error: profileError } = await supabase
+        .from('users')
+        .select('id, email, role, name')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profileError) {
+        console.error('[OAuth Callback] Error fetching profile:', profileError.message);
+        console.log(`[OAuth Callback] User may not exist in users table. Creating/updating...`);
+        
+        // If user doesn't exist, create a record
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert({
+            id: data.user.id,
+            email: email,
+            role: 'user',
+            name: data.user.user_metadata?.name || email?.split('@')[0] || 'User',
+            id_number: data.user.user_metadata?.id_number || 'N/A'
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error('[OAuth Callback] Error creating user record:', insertError.message);
+        } else {
+          console.log('[OAuth Callback] User record created successfully');
+        }
+      } else {
+        console.log('[OAuth Callback] User profile found:');
+        console.log(`  - ID: ${profile?.id}`);
+        console.log(`  - Email: ${profile?.email}`);
+        console.log(`  - Role: ${profile?.role}`);
+        console.log(`  - Name: ${profile?.name}`);
+      }
+
       // Create audit log entry for successful login
       await supabase.from('audit_logs').insert({
         user_id: data.user.id,
@@ -124,11 +176,13 @@ export async function GET(request: Request) {
         details: {
           email: email,
           login_method: 'oauth_google',
-          ip_address: clientIP
+          ip_address: clientIP,
+          user_role: profile?.role || 'user'
         },
         ip_address: clientIP
       });
 
+      console.log('[OAuth Callback] Login successful, redirecting to dashboard');
       // Redirect to dashboard on success
       return NextResponse.redirect(`${requestUrl.origin}/dashboard`);
     } else {

@@ -203,7 +203,7 @@ Person A
 
 Person B
 
-- [ ] Add authentication attempt logging to OAuth callback
-- [ ] Implement manager dashboard functionality
+- [x] Add authentication attempt logging to OAuth callback
+- [x] Implement manager dashboard functionality
 - [x] Implement account lockout mechanism and rate limiting
-- [ ] Add re-authentication for critical admin operations
+- [x] Add re-authentication for critical admin operations
