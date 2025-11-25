@@ -201,7 +201,7 @@ export default function AuditLogsPage() {
                     <SelectValue placeholder="All Actions" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Actions</SelectItem>
+                    <SelectItem value="__all__">All Actions</SelectItem>
                     <SelectItem value="user_login">User Login</SelectItem>
                     <SelectItem value="user_created">User Created</SelectItem>
                     <SelectItem value="user_updated">User Updated</SelectItem>
@@ -221,7 +221,7 @@ export default function AuditLogsPage() {
                     <SelectValue placeholder="All Types" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Types</SelectItem>
+                    <SelectItem value="__all__">All Types</SelectItem>
                     <SelectItem value="auth">Authentication</SelectItem>
                     <SelectItem value="user">User</SelectItem>
                     <SelectItem value="booking">Booking</SelectItem>
