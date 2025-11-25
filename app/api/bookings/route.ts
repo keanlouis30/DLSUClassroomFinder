@@ -8,7 +8,7 @@ const BookingSchema = z.object({
   start_time: z.string().regex(/^\d{2}:\d{2}$/),
   end_time: z.string().regex(/^\d{2}:\d{2}$/),
   purpose: z.enum(['group_study', 'project_meeting', 'review_session', 'org_activity', 'presentation_prep', 'tutoring', 'workshop']),
-  purpose_details: z.string().optional().nullable(),
+  purpose_details: z.string().max(200, "Additional details cannot exceed 200 characters").optional().nullable(),
   estimated_attendees: z.number().int().min(2),
 });
 
