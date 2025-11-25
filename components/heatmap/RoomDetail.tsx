@@ -20,6 +20,8 @@ export default function RoomDetail({ roomId, roomName, buildingId }: RoomDetailP
   const router = useRouter()
   const supabase = createClient()
 
+  console.log('[RoomDetail] Component mounted with props:', { roomId, roomName, buildingId })
+
   // Time slots for the day (8 AM to 8 PM)
   const timeSlots = Array.from({ length: 13 }, (_, i) => {
     const hour = i + 8
@@ -35,16 +37,24 @@ export default function RoomDetail({ roomId, roomName, buildingId }: RoomDetailP
 
   const fetchClassroomDetails = async () => {
     try {
-      const response = await fetch(`/api/heatmap/classrooms?buildingId=${buildingId}&floor=1`)
+      console.log('[RoomDetail] Fetching classroom details for ID:', roomId)
+      const response = await fetch(`/api/heatmap/classroom?id=${roomId}`)
+      console.log('[RoomDetail] API response status:', response.status)
+      
       if (response.ok) {
         const data = await response.json()
-        const room = data.classrooms.find((c: ClassroomWithStatus) => c.id === roomId)
-        if (room) {
-          setClassroom(room)
+        console.log('[RoomDetail] Received classroom data:', data)
+        if (data.classroom) {
+          setClassroom(data.classroom)
         }
+      } else if (response.status === 404) {
+        console.error('[RoomDetail] Classroom not found (404)')
+      } else {
+        const errorData = await response.json()
+        console.error('[RoomDetail] Error response:', errorData)
       }
     } catch (error) {
-      console.error('Error fetching classroom details:', error)
+      console.error('[RoomDetail] Error fetching classroom details:', error)
     }
   }
 
