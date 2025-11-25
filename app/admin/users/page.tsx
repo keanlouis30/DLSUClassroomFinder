@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Plus, Search, Edit, Trash2, Eye, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { ReAuthDialog } from '@/components/ReAuthDialog'
 
 interface User {
   id: string
@@ -44,11 +45,13 @@ export default function AdminUsersPage() {
   })
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [roleFilter, setRoleFilter] = useState<string>('')
-  const [statusFilter, setStatusFilter] = useState<string>('')
+  const [roleFilter, setRoleFilter] = useState<string>('all')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [showReAuthDialog, setShowReAuthDialog] = useState(false)
+  const [pendingAction, setPendingAction] = useState<'update' | 'delete' | null>(null)
   const { toast } = useToast()
   const supabase = createClient()
 
@@ -63,8 +66,8 @@ export default function AdminUsersPage() {
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
         ...(search && { search }),
-        ...(roleFilter && { role: roleFilter }),
-        ...(statusFilter && { status: statusFilter })
+        ...(roleFilter !== 'all' && { role: roleFilter }),
+        ...(statusFilter !== 'all' && { status: statusFilter })
       })
 
       const response = await fetch(`/api/admin/users?${params}`)
@@ -168,11 +171,68 @@ export default function AdminUsersPage() {
     }
   }
 
+  const handleUpdateUserWithReAuth = (formData: FormData) => {
+    // Store form data for later use after re-auth
+    sessionStorage.setItem('pendingUserUpdate', JSON.stringify(Object.fromEntries(formData)))
+    setPendingAction('update')
+    setShowReAuthDialog(true)
+  }
+
+  const executeUpdateAfterReAuth = async () => {
+    if (!selectedUser) return
+
+    const storedData = sessionStorage.getItem('pendingUserUpdate')
+    if (!storedData) return
+
+    const updateData = JSON.parse(storedData)
+    try {
+      const response = await fetch(`/api/admin/users/${selectedUser.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updateData)
+      })
+
+      if (response.ok) {
+        toast({
+          title: 'Success',
+          description: 'User updated successfully'
+        })
+        setShowEditModal(false)
+        setSelectedUser(null)
+        fetchUsers()
+      } else {
+        const error = await response.json()
+        toast({
+          title: 'Error',
+          description: error.error || 'Failed to update user',
+          variant: 'destructive'
+        })
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update user',
+        variant: 'destructive'
+      })
+    } finally {
+      sessionStorage.removeItem('pendingUserUpdate')
+    }
+  }
+
   const handleDeactivateUser = async (user: User) => {
     if (!confirm(`Are you sure you want to deactivate ${user.name}?`)) return
 
+    // Trigger re-auth for this critical action
+    setSelectedUser(user)
+    setPendingAction('delete')
+    setShowReAuthDialog(true)
+  }
+
+  const executeDeactivateAfterReAuth = async () => {
+    if (!selectedUser) return
+
     try {
-      const response = await fetch(`/api/admin/users/${user.id}`, {
+      const response = await fetch(`/api/admin/users/${selectedUser.id}`, {
         method: 'DELETE'
       })
 
@@ -196,6 +256,8 @@ export default function AdminUsersPage() {
         description: 'Failed to deactivate user',
         variant: 'destructive'
       })
+    } finally {
+      setSelectedUser(null)
     }
   }
 
@@ -238,6 +300,9 @@ export default function AdminUsersPage() {
                 <DialogHeader>
                   <DialogTitle>Create New User</DialogTitle>
                 </DialogHeader>
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4 text-sm text-blue-800">
+                  <p><strong>Note:</strong> Users must log in via Google OAuth first with their @dlsu.edu.ph account. After they log in, their profile will be created and you can update their role and department here.</p>
+                </div>
                 <form action={handleCreateUser} className="space-y-4">
                   <div>
                     <Label htmlFor="email">Email</Label>
@@ -303,7 +368,7 @@ export default function AdminUsersPage() {
                   <SelectValue placeholder="Role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Roles</SelectItem>
+                  <SelectItem value="all">All Roles</SelectItem>
                   <SelectItem value="user">User</SelectItem>
                   <SelectItem value="manager">Manager</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
@@ -314,7 +379,7 @@ export default function AdminUsersPage() {
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Status</SelectItem>
+                  <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="inactive">Inactive</SelectItem>
                   <SelectItem value="suspended">Suspended</SelectItem>
@@ -439,7 +504,7 @@ export default function AdminUsersPage() {
               <DialogTitle>Edit User</DialogTitle>
             </DialogHeader>
             {selectedUser && (
-              <form action={handleUpdateUser} className="space-y-4">
+              <form action={handleUpdateUserWithReAuth} className="space-y-4">
                 <div>
                   <Label>Email</Label>
                   <Input value={selectedUser.email} disabled />
@@ -501,6 +566,24 @@ export default function AdminUsersPage() {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Re-authentication Dialog for Critical Actions */}
+        <ReAuthDialog
+          open={showReAuthDialog}
+          onOpenChange={setShowReAuthDialog}
+          onSuccess={() => {
+            if (pendingAction === 'update') {
+              executeUpdateAfterReAuth()
+            } else if (pendingAction === 'delete') {
+              executeDeactivateAfterReAuth()
+            }
+          }}
+          actionName={
+            pendingAction === 'update' 
+              ? `Update User: ${selectedUser?.name}` 
+              : `Deactivate User: ${selectedUser?.name}`
+          }
+        />
       </main>
     </div>
   )

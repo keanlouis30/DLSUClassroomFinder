@@ -191,3 +191,18 @@ For issues or questions:
 
 **Note**: Make sure to run the database migration and configure Google OAuth before using the application. See `SETUP_GUIDE.md` for step-by-step instructions.
 
+## TODO
+Person A
+
+- [ ] Create test account seed script
+- [ ] Add last login display to user dashboard
+- [ ] Add input validation failure logging
+- [ ] Audit and complete text length validation for all inputs
+- [ ] Audit for stack trace prevention
+
+Person B
+
+- [ ] Add authentication attempt logging to OAuth callback
+- [ ] Implement manager dashboard functionality
+- [x] Implement account lockout mechanism and rate limiting
+- [ ] Add re-authentication for critical admin operations

@@ -204,8 +204,8 @@ $$ LANGUAGE plpgsql;
 
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_status_reports_classroom ON classroom_status_reports(classroom_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_status_reports_expires ON classroom_status_reports(expires_at) WHERE expires_at > NOW();
-CREATE INDEX IF NOT EXISTS idx_status_reports_confidence ON classroom_status_reports(confidence_score) WHERE confidence_score >= 0.6;
+CREATE INDEX IF NOT EXISTS idx_status_reports_expires ON classroom_status_reports(expires_at);
+CREATE INDEX IF NOT EXISTS idx_status_reports_confidence ON classroom_status_reports(confidence_score);
 CREATE INDEX IF NOT EXISTS idx_verifications_report ON status_report_verifications(report_id);
 
 -- Enable RLS

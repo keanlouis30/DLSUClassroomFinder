@@ -30,6 +30,30 @@ export async function GET(request: Request) {
     if (!error && data.user) {
       const email = data.user.email;
 
+      // Check IP-based rate limiting
+      const { data: ipLimitData } = await supabase.rpc('is_ip_rate_limited', {
+        client_ip: clientIP
+      });
+
+      if (ipLimitData?.[0]?.is_limited) {
+        const minutesRemaining = ipLimitData[0].minutes_remaining;
+        
+        // Log blocked attempt
+        await supabase.rpc('log_login_attempt', {
+          user_email: email || 'unknown',
+          is_success: false,
+          client_ip: clientIP,
+          client_user_agent: userAgent,
+          error_msg: `IP rate limited. Try again in ${minutesRemaining} minutes`,
+          is_domain_valid: true
+        });
+
+        await supabase.auth.signOut();
+        return NextResponse.redirect(
+          `${requestUrl.origin}/auth/login?error=rate_limited&minutes=${minutesRemaining}`
+        );
+      }
+
       // Enforce @dlsu.edu.ph domain
       if (!email?.endsWith('@dlsu.edu.ph')) {
         // Log failed login attempt due to invalid domain
@@ -48,6 +72,30 @@ export async function GET(request: Request) {
         // Redirect to login with error
         return NextResponse.redirect(
           `${requestUrl.origin}/auth/login?error=invalid_domain`
+        );
+      }
+
+      // Check account-based rate limiting
+      const { data: accountLimitData } = await supabase.rpc('is_account_rate_limited', {
+        user_email: email
+      });
+
+      if (accountLimitData?.[0]?.is_limited) {
+        const minutesRemaining = accountLimitData[0].minutes_remaining;
+        
+        // Log blocked attempt
+        await supabase.rpc('log_login_attempt', {
+          user_email: email,
+          is_success: false,
+          client_ip: clientIP,
+          client_user_agent: userAgent,
+          error_msg: `Account rate limited. Try again in ${minutesRemaining} minutes`,
+          is_domain_valid: true
+        });
+
+        await supabase.auth.signOut();
+        return NextResponse.redirect(
+          `${requestUrl.origin}/auth/login?error=account_locked&minutes=${minutesRemaining}`
         );
       }
 

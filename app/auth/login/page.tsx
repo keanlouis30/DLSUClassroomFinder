@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/client'
 import FaultyTerminal from '@/components/FaultyTerminal'
+import { RateLimitErrorDisplay } from '@/components/RateLimitErrorDisplay'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
@@ -100,6 +101,9 @@ export default function LoginPage() {
                   </p>
                 </div>
               )}
+
+              {/* Rate Limit Error Display */}
+              <RateLimitErrorDisplay />
 
               {/* Google Sign In Button */}
               <button
