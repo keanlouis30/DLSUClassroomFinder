@@ -1,11 +1,9 @@
-// scripts/seeds.ts; need to test pa since iba yung supabase 
+// scripts/seeds.ts
+// npx ts-node scripts/seeds.ts
+
 const { createClient } = require("@supabase/supabase-js");
 require("dotenv").config({ path: ".env.local" });
 
-if (!process.env.ADMIN_EMAIL || !process.env.MANAGER_EMAIL) {
-  console.error("Error: ADMIN_EMAIL or MANAGER_EMAIL is missing");
-  process.exit(1);
-}
 if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
   console.error("Error: Supabase URL or Service Role Key is missing");
   process.exit(1);
@@ -16,51 +14,38 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-const ROLES = [
+const USERS_TO_ASSIGN = [
   { email: process.env.ADMIN_EMAIL, role: "admin" },
-  { email: process.env.MANAGER_EMAIL, role: "manager" }
-];
+  { email: process.env.MANAGER_EMAIL, role: "manager" },
+  { email: process.env.USER_EMAIL, role: "user" },
+].filter(entry => !!entry.email);
 
 async function seed() {
-  console.log("Assigning roles to existing users...");
+  console.log("Assigning roles to users...");
 
-  try {
-    const { data: listData, error: listError } = await supabase.auth.admin.listUsers();
-    if (listError) throw listError;
+  for (const entry of USERS_TO_ASSIGN) {
+    try {
+      // Update the user's role based on email
+      const { data, error } = await supabase
+        .from("users")
+        .update({ role: entry.role })
+        .eq("email", entry.email)
+        .select();
 
-    const users = listData.users;
-
-    for (const entry of ROLES) {
-      const user = users.find((u: any) => u.email === entry.email);
-
-      if (!user) {
-        console.warn(`User ${entry.email} not found. They must log in via Google first.`);
-        continue;
+      if (error) {
+        console.warn(`Failed to assign role ${entry.role} to ${entry.email}:`, error.message);
+      } else if (data.length === 0) {
+        console.warn(`User with email ${entry.email} not found.`);
+      } else {
+        console.log(`Assigned role ${entry.role} to ${entry.email}`);
       }
 
-      const { data: role, error: roleError } = await supabase
-        .from("roles")
-        .select("id")
-        .eq("name", entry.role)
-        .single();
-
-      if (roleError || !role) {
-        console.warn(`Role ${entry.role} not found`);
-        continue;
-      }
-
-      await supabase.from("user_roles").upsert(
-        { user_id: user.id, role_id: role.id },
-        { onConflict: "user_id, role_id" }
-      );
-
-      console.log(`Promoted ${entry.email} to ${entry.role}`);
+    } catch (err) {
+      console.error(`Unexpected error assigning role ${entry.role} to ${entry.email}:`, err);
     }
-
-    console.log("Seeding completed!");
-  } catch (err) {
-    console.error("Error during seeding:", err);
   }
+
+  console.log("Seeding completed!");
 }
 
-seed();
+seed(); 
